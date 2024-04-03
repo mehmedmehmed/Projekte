@@ -1,0 +1,87 @@
+import sklearn.preprocessing as skp
+ohe = skp.LabelEncoder()
+
+encoded = ohe.fit_transform(df['contact'])
+encoded_df = pd.DataFrame(encoded, columns=['contact'])
+
+cat = df.select_dtypes(include= ["object"]).columns
+for column in cat:
+    plt.figure(figsize=(4,1))
+    df[column].value_counts().plot(kind="bar")
+    plt.title(column)
+
+df = df.replace('unknown', np.nan)
+
+df["y"].value_counts()
+print('Anteil an Ja oder Nein bei', df['y'].value_counts()/len(df)*100)
+
+ed_order = ['illiterate', 'basic.4y', 'basic.6y', 'basic.9y', 'high.school', 'professional.course', 'university.degree']
+
+for column in cat_obj:
+    df_num[column] = le.fit_transform(df_num[column])
+
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    df_num.drop('y', axis=1), df_num['y'],
+    test_size=0.25, random_state=42)
+
+cm = confusion_matrix(y_test, y_pred)
+cm_norm = np.round(cm/np.sum(cm, axis=1).reshape(-1,1), 2)
+cm_norm = np.round(cm/np.sum(cm, axis=1), 2)
+
+sns.heatmap(cm_norm, cmap='Blues', annot=True, xticklabels=['no', 'yes'], yticklabels=['no', 'yes'])
+plt.xlabel('predicted')
+plt.ylabel('actual')
+
+
+study = optuna.create_study(direction='maximize', sampler=optuna.samplers.RandomSampler())
+study.optimize(objective, n_trials = 5, show_progress_bar=True)
+
+def objective(trial):
+
+    # Invoke suggest methods of a Trial object to generate hyperparameters.
+    regressor_name = trial.suggest_categorical('classifier', ['DecisionTree', 'RandomForest'])
+    if regressor_name == 'SVR':
+        svr_c = trial.suggest_float('svr_c', 1e-10, 1e10, log=True)
+        regressor_obj = sklearn.svm.SVR(C=svr_c)
+    else:
+        rf_max_depth = trial.suggest_int('rf_max_depth', 2, 32)
+        regressor_obj = sklearn.ensemble.RandomForestRegressor(max_depth=rf_max_depth)
+
+    X, y = sklearn.datasets.fetch_california_housing(return_X_y=True)
+    X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(X, y, random_state=0)
+
+    regressor_obj.fit(X_train, y_train)
+    y_pred = regressor_obj.predict(X_val)
+
+    error = sklearn.metrics.mean_squared_error(y_val, y_pred)
+
+    return error  # An objective value linked with the Trial object.
+
+study = optuna.create_study()  # Create a new study.
+study.optimize(objective, n_trials=100)
+
+best_params = study.best_params()
+best_accuracy = study.best_value()
+
+print("Best parameters: ", best_params)
+print("Best accuracy: ", best_accuracy)
+
+study.optimize(objective, n_trials=50)
+
+# compute interquantile range to calculate the boundaries
+lower_boundries= []
+upper_boundries= []
+for i in ["age", "duration", "campaign"]:
+    IQR= data[i].quantile(0.75) - data[i].quantile(0.25)
+    lower_bound= data[i].quantile(0.25) - (1.5*IQR)
+    upper_bound= data[i].quantile(0.75) + (1.5*IQR)
+    
+    print(i, ":", lower_bound, ",",  upper_bound)
+    
+    lower_boundries.append(lower_bound)
+    upper_boundries.append(upper_bound)
+
+    n_estimators = trial.suggest_int('n_estimators', 100, 1000)
